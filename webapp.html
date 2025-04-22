@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Snake Game</title>
+  <style>
+    body {
+      background-color: #d3d3d3;
+      color: black;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      text-align: center;
+    }
+
+    h1 {
+      margin-top: 20px;
+    }
+
+    canvas {
+      background-color: #fff;
+      display: block;
+      margin: 20px auto;
+      border: 3px solid black;
+    }
+
+    #score {
+      font-size: 20px;
+      margin-bottom: 10px;
+    }
+
+    nav a {
+      color: black;
+      font-weight: bold;
+      text-decoration: none;
+      padding: 10px;
+    }
+
+    nav a:hover {
+      background-color: #ccc;
+    }
+
+    #restartBtn {
+      display: none;
+      margin: 20px auto;
+      padding: 10px 20px;
+      font-size: 18px;
+      background-color: #000;
+      color: white;
+      border: none;
+      cursor: pointer;
+      border-radius: 5px;
+    }
+
+    #restartBtn:hover {
+      background-color: #333;
+    }
+  </style>
+</head>
+<body>
+  <nav>
+    <a href="index.html">Homepage</a>
+    <a href="scratch.html">Lake Powell</a>
+    <a href="contact.html">Contact</a>
+    <a href="webapp.html">Web App</a>
+  </nav>
+
+  <h1>🐍 Snake Game</h1>
+  <div id="score">Score: 0</div>
+  <canvas id="gameCanvas" width="400" height="400"></canvas>
+  <button id="restartBtn">Restart Game</button>
+  <p>Use the arrow keys to control the snake</p>
+
+  <script>
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+    const box = 20;
+    let game;
+    let score = 0;
+    let direction = "RIGHT";
+    let snake, food;
+
+    const restartBtn = document.getElementById("restartBtn");
+
+    function initGame() {
+      snake = [{ x: 200, y: 200 }];
+      direction = "RIGHT";
+      food = spawnFood();
+      score = 0;
+      document.getElementById("score").innerText = "Score: " + score;
+      restartBtn.style.display = "none";
+      clearInterval(game);
+      game = setInterval(draw, 150);
+    }
+
+    function spawnFood() {
+      return {
+        x: Math.floor(Math.random() * (canvas.width / box)) * box,
+        y: Math.floor(Math.random() * (canvas.height / box)) * box
+      };
+    }
+
+    function randomColor() {
+      const letters = '0123456789ABCDEF';
+      let color = '#';
+      for (let i = 0; i < 6; i++) {
+        color += letters[Math.floor(Math.random() * 16)];
+      }
+      return color;
+    }
+
+    document.addEventListener("keydown", e => {
+      if (e.key === "ArrowUp" && direction !== "DOWN") direction = "UP";
+      else if (e.key === "ArrowDown" && direction !== "UP") direction = "DOWN";
+      else if (e.key === "ArrowLeft" && direction !== "RIGHT") direction = "LEFT";
+      else if (e.key === "ArrowRight" && direction !== "LEFT") direction = "RIGHT";
+    });
+
+    function collision(head, array) {
+      return array.some(segment => head.x === segment.x && head.y === segment.y);
+    }
+
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Draw snake
+      snake.forEach((segment, index) => {
+        ctx.fillStyle = index === 0 ? "#00cc00" : randomColor();
+        ctx.fillRect(segment.x, segment.y, box, box);
+      });
+
+      // Draw food
+      ctx.fillStyle = "red";
+      ctx.fillRect(food.x, food.y, box, box);
+
+      // Move snake
+      const head = { ...snake[0] };
+      if (direction === "UP") head.y -= box;
+      if (direction === "DOWN") head.y += box;
+      if (direction === "LEFT") head.x -= box;
+      if (direction === "RIGHT") head.x += box;
+
+      // Wall and self collision
+      if (
+        head.x < 0 || head.x >= canvas.width ||
+        head.y < 0 || head.y >= canvas.height ||
+        collision(head, snake)
+      ) {
+        clearInterval(game);
+        restartBtn.style.display = "block";
+        return;
+      }
+
+      snake.unshift(head);
+
+      // Eat food
+      if (head.x === food.x && head.y === food.y) {
+        score++;
+        document.getElementById("score").innerText = "Score: " + score;
+        food = spawnFood();
+      } else {
+        snake.pop();
+      }
+    }
+
+    restartBtn.addEventListener("click", initGame);
+
+    initGame();
+  </script>
+</body>
+</html>
+
